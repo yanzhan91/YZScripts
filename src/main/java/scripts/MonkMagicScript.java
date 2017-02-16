@@ -1,7 +1,7 @@
 package scripts;
 
-import exception.MonkMagicException;
 import org.tribot.api.input.Mouse;
+import org.tribot.api.util.abc.ABCUtil;
 import org.tribot.api2007.*;
 import org.tribot.api2007.types.RSItem;
 import org.tribot.api2007.types.RSNPC;
@@ -33,6 +33,7 @@ public class MonkMagicScript extends Script {
 
     private RSNPC monkOfZamorak = null;
     private Random random = new Random(new Date().getTime());
+    private ABCUtil abcUtil = new ABCUtil();
 
     @Override
     public void run() {
@@ -44,11 +45,12 @@ public class MonkMagicScript extends Script {
                     verifyPlayerInRightPosition();
                     verifyArmorIsEquipped();
 
+                    performAntiBan();
                     selectSpell();
                 }
                 sleep(random.nextInt(1000) + 1500);
             }
-        } catch (MonkMagicException mme) {
+        } catch (YZScriptException mme) {
             System.out.println(mme.getMessage());
         }
     }
@@ -56,7 +58,7 @@ public class MonkMagicScript extends Script {
     private void verifyMonkIsNearby() {
         RSNPC[] npcs = NPCs.findNearest(MONK_OF_ZAMORAK);
         if (npcs.length < 1) {
-            throw new MonkMagicException("No Monk of Zamorak nearby. Please move to varrok castle near the Monk of Zamorak.");
+            throw new YZScriptException("No Monk of Zamorak nearby. Please move to varrok castle near the Monk of Zamorak.");
         }
         monkOfZamorak = npcs[0];
     }
@@ -73,7 +75,31 @@ public class MonkMagicScript extends Script {
                 || Equipment.getItem(Equipment.SLOTS.HELMET) == null
                 || Equipment.getItem(Equipment.SLOTS.LEGS) == null
                 || Equipment.getItem(Equipment.SLOTS.SHIELD) == null) {
-            throw new MonkMagicException("Wearing armor set is strongly recommended. Exiting...");
+            throw new YZScriptException("Wearing armor set is strongly recommended. Exiting...");
+        }
+    }
+
+    private void performAntiBan() {
+        switch (random.nextInt(20)) {
+            case 1:
+                abcUtil.moveMouse();
+                break;
+            case 2:
+                abcUtil.checkTabs();
+                sleep(2000);
+                break;
+            case 3:
+                abcUtil.checkXP();
+                sleep(2000);
+                break;
+            case 4:
+                abcUtil.pickupMouse();
+                break;
+            case 5:
+                abcUtil.rightClick();
+                break;
+            default:
+                break;
         }
     }
 
@@ -87,7 +113,7 @@ public class MonkMagicScript extends Script {
         } else if (magicLevel >= WIND_STRIKE_LEVEL) {
             caseWindStrike();
         } else {
-            throw new MonkMagicException("Internal Error: Magic Level is " + magicLevel);
+            throw new YZScriptException("Internal Error: Magic Level is " + magicLevel);
         }
     }
 
@@ -110,18 +136,18 @@ public class MonkMagicScript extends Script {
         boolean staffEquipped = false;
 
         if (bodyRuneCount < 1) {
-            throw new MonkMagicException("Body Rune count " + bodyRuneCount + " for Curse");
+            throw new YZScriptException("Body Rune count " + bodyRuneCount + " for Curse");
         }
 
         if (waterRuneCount < 2 && !Equipment.isEquipped(STAFF_OF_WATER)) {
             if (!(staffEquipped = equipItem(STAFF_OF_WATER))) {
-                throw new MonkMagicException("Water Rune count " + waterRuneCount + " for Curse");
+                throw new YZScriptException("Water Rune count " + waterRuneCount + " for Curse");
             }
         }
 
         if (earthRuneCount < 3 && !Equipment.isEquipped(STAFF_OF_EARTH)) {
             if (staffEquipped || !equipItem(STAFF_OF_EARTH)) {
-                throw new MonkMagicException("Earth Rune count " + earthRuneCount + " for Curse");
+                throw new YZScriptException("Earth Rune count " + earthRuneCount + " for Curse");
             }
         }
     }
@@ -145,18 +171,18 @@ public class MonkMagicScript extends Script {
         boolean staffEquipped = false;
 
         if (mindRuneCount < 1) {
-            throw new MonkMagicException("Mind Rune count " + mindRuneCount + " for Fire Strike");
+            throw new YZScriptException("Mind Rune count " + mindRuneCount + " for Fire Strike");
         }
 
         if (airRuneCount < 2 && !Equipment.isEquipped(STAFF_OF_AIR)) {
             if (!(staffEquipped = equipItem(STAFF_OF_AIR))) {
-                throw new MonkMagicException("Air Rune count " + airRuneCount + " for Fire Strike");
+                throw new YZScriptException("Air Rune count " + airRuneCount + " for Fire Strike");
             }
         }
 
         if (fireRuneCount < 3 && !Equipment.isEquipped(STAFF_OF_FIRE)) {
             if (staffEquipped || !equipItem(STAFF_OF_FIRE)) {
-                throw new MonkMagicException("Fire Rune count " + fireRuneCount + " for Fire Strike");
+                throw new YZScriptException("Fire Rune count " + fireRuneCount + " for Fire Strike");
             }
         }
     }
@@ -177,12 +203,12 @@ public class MonkMagicScript extends Script {
         int airRuneCount = Inventory.getCount(AIR_RUNE);
 
         if (mindRuneCount < 1) {
-            throw new MonkMagicException("Mind Rune count " + mindRuneCount + " for Wind Strike");
+            throw new YZScriptException("Mind Rune count " + mindRuneCount + " for Wind Strike");
         }
 
         if (airRuneCount < 1 && !Equipment.isEquipped(STAFF_OF_AIR)) {
             if (!equipItem(STAFF_OF_AIR)) {
-                throw new MonkMagicException("Air Rune count " + airRuneCount + " for Wind Strike");
+                throw new YZScriptException("Air Rune count " + airRuneCount + " for Wind Strike");
             }
         }
     }
