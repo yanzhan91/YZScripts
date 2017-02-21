@@ -1,8 +1,12 @@
 package scripts;
 
+import org.tribot.api.DynamicClicking;
 import org.tribot.api.input.Mouse;
 import org.tribot.api.util.abc.ABCUtil;
 import org.tribot.api2007.*;
+import org.tribot.api2007.Magic;
+import org.tribot.api2007.Player;
+import org.tribot.api2007.Skills;
 import org.tribot.api2007.types.RSItem;
 import org.tribot.api2007.types.RSNPC;
 import org.tribot.api2007.types.RSTile;
@@ -11,6 +15,9 @@ import org.tribot.script.ScriptManifest;
 
 import java.util.Date;
 import java.util.Random;
+
+import static org.tribot.api2007.Constants.IDs.Spells.fire_strike;
+import static org.tribot.api2007.Constants.IDs.Spells.wind_strike;
 
 @SuppressWarnings("unused")
 @ScriptManifest(authors = {"YZ"}, category = "Magic", name = "YZMonkMagicScript")
@@ -38,6 +45,7 @@ public class MonkMagicScript extends Script {
     @Override
     public void run() {
         Mouse.setSpeed(150);
+
         try {
             while (true) {
                 if (!Player.isMoving()) {
@@ -61,6 +69,9 @@ public class MonkMagicScript extends Script {
             throw new YZScriptException("No Monk of Zamorak nearby. Please move to varrok castle near the Monk of Zamorak.");
         }
         monkOfZamorak = npcs[0];
+        if (!monkOfZamorak.isOnScreen()) {
+            throw new YZScriptException("No Monk of Zamorak on screen. Please move to varrok castle near the Monk of Zamorak.");
+        }
     }
 
     private void verifyPlayerInRightPosition() {
@@ -109,12 +120,13 @@ public class MonkMagicScript extends Script {
         if (magicLevel >= CURSE_LEVEL) {
             castCurse();
         } else if (magicLevel >= FIRE_STRIKE_LEVEL) {
-            caseFireStrike();
+            castStrike(fire_strike);
         } else if (magicLevel >= WIND_STRIKE_LEVEL) {
-            caseWindStrike();
+            castStrike(wind_strike);
         } else {
             throw new YZScriptException("Internal Error: Magic Level is " + magicLevel);
         }
+        DynamicClicking.clickRSModel(monkOfZamorak.getModel(), "Attack");
     }
 
     private void castCurse() {
@@ -122,9 +134,6 @@ public class MonkMagicScript extends Script {
         GameTab.open(GameTab.TABS.MAGIC);
         if (!Magic.selectSpell("Curse")) {
             System.out.println("Curse spell cast Unsuccessful");
-        } else{
-            sleep(random.nextInt(500) + 1000);
-            monkOfZamorak.click();
         }
     }
 
@@ -152,17 +161,6 @@ public class MonkMagicScript extends Script {
         }
     }
 
-    private void caseFireStrike() {
-        verifyFireStrikeRunesInInventory();
-        GameTab.open(GameTab.TABS.MAGIC);
-        if (!Magic.selectSpell("Fire Strike")) {
-            System.out.println("Fire Strike spell cast Unsuccessful");
-        } else {
-            sleep(random.nextInt(500) + 1000);
-            monkOfZamorak.click();
-        }
-    }
-
     private void verifyFireStrikeRunesInInventory() {
         int mindRuneCount = Inventory.getCount(MIND_RUNE);
         int airRuneCount = Inventory.getCount(AIR_RUNE);
@@ -187,17 +185,6 @@ public class MonkMagicScript extends Script {
         }
     }
 
-    private void caseWindStrike() {
-        verifyWindStrikeRunesInInventory();
-        GameTab.open(GameTab.TABS.MAGIC);
-        if (!Magic.selectSpell("Wind Strike")) {
-            System.out.println("Wind Strike spell cast Unsuccessful");
-        } else {
-            sleep(random.nextInt(500) + 1000);
-            monkOfZamorak.click();
-        }
-    }
-
     private void verifyWindStrikeRunesInInventory() {
         int mindRuneCount = Inventory.getCount(MIND_RUNE);
         int airRuneCount = Inventory.getCount(AIR_RUNE);
@@ -211,6 +198,49 @@ public class MonkMagicScript extends Script {
                 throw new YZScriptException("Air Rune count " + airRuneCount + " for Wind Strike");
             }
         }
+    }
+
+    private void castStrike(int spellId) {
+        switch (spellId) {
+            case wind_strike:
+                verifyWindStrikeRunesInInventory();
+                break;
+            case fire_strike:
+                verifyFireStrikeRunesInInventory();
+                break;
+            default:
+                throw new YZScriptException("Invalid spell ID for combat skill: " + spellId);
+        }
+        sleepWithRandom(1000);
+        selectCombatSpell(spellId);
+    }
+
+    private void selectCombatSpell(int spellId) {
+        if (Combat.getSelectedStyleIndex() == 1) {
+            return;
+        }
+        Combat.selectIndex(1);
+        sleepWithRandom(1000);
+        switch (spellId) {
+            case wind_strike:
+                Mouse.click(randomize(583, 5, false), randomize(226, 5, false), 1);
+                break;
+            case fire_strike:
+                Mouse.click(randomize(703, 5, false), randomize(226, 5, false), 1);
+                break;
+            default:
+                throw new YZScriptException("Invalid spell ID for combat skill: " + spellId);
+        }
+    }
+
+    private int randomize(int num, int var, boolean positiveOnly) {
+        int variation = random.nextInt(var);
+        variation = positiveOnly || random.nextInt(4) % 2 == 0 ? variation : -variation;
+        return num + variation;
+    }
+
+    private void sleepWithRandom(long millis) {
+        sleep(millis + random.nextInt(1000));
     }
 
     private boolean equipItem(int id) {

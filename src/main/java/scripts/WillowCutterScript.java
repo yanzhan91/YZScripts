@@ -4,7 +4,6 @@ import org.tribot.api.util.abc.ABCUtil;
 import org.tribot.api2007.*;
 import org.tribot.api2007.Objects;
 import org.tribot.api2007.ext.Filters;
-import org.tribot.api2007.types.RSItem;
 import org.tribot.api2007.types.RSObject;
 import org.tribot.api2007.types.RSTile;
 import org.tribot.script.Script;
@@ -26,10 +25,16 @@ public class WillowCutterScript extends Script {
     private ABCUtil abcUtil = new ABCUtil();
     private HashSet<Integer> hatchets = Arrays.stream(Constants.IDs.Items.hatchets).boxed().collect(Collectors.toCollection(HashSet::new));
 
+    private int hour = 60 * 60 * 1000;
+
     @Override
     public void run() {
+
+        long start = System.currentTimeMillis();
+        long end = start + 10 * hour;
+
         try {
-            while (true) {
+            while (System.currentTimeMillis() < end) {
                 sleep(3000);
                 checkForAxe();
                 movePlayerIntoPosition();
@@ -43,6 +48,8 @@ public class WillowCutterScript extends Script {
         } catch (YZScriptException e) {
             System.out.println(e.getMessage());
         }
+
+        Login.logout();
     }
 
     private void checkForAxe() {
